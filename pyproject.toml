@@ -1,0 +1,22 @@
+[project]
+name = "twitchplays"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "wrldmap",email = "123031534+wrldmap@users.noreply.github.com"}
+]
+requires-python = "^3.14"
+dependencies = [
+    "twitch-py (==4.0.4)",
+    "python-dotenv (==1.2.2)",
+    "fastapi (>=0.139.0,<0.140.0)",
+    "asqlite (==2.0.0)",
+    "uvicorn (>=0.51.0,<0.52.0)",
+    "websockets (>=16.0,<17.0)",
+    "vgamepad (==0.1.0)",
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
