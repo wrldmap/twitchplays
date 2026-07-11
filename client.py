@@ -43,6 +43,7 @@ class DS4GP:
 
 gp = DS4GP()
 WEBSOCKET_URL = "ws://localhost:8080/ws" # Change to server's IP if on different machines.
+BROADCASTER_TARGETS = {'wrldmap'} # Change this to your Twitch username, or add more!
 ENABLED = False
 cmds = {
     '!enable', '!disable', # other cmds
@@ -153,7 +154,7 @@ async def handle_command(clean_cmd, long, broadcaster, editor, msgid, websocket)
     global ENABLED
 
     # Only accept from my channel, please!
-    if broadcaster != "wrldmap":
+    if broadcaster not in BROADCASTER_TARGETS:
         return
 
     if clean_cmd == '!enable' and editor:
