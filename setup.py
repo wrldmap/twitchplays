@@ -65,5 +65,5 @@ async def main():
     save_to_env({'ACCESS_TOKEN': token.access_token, 'REFRESH_TOKEN': token.refresh_token})
     save_to_env({'CONDUIT_ID': conduitid})
 
-    print("Saved to .env, you can run main.py now!")
+    print("Saved to .env, you can run bot.py now!")
 asyncio.run(main())
