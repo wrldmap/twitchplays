@@ -46,17 +46,10 @@ WEBSOCKET_URL = "ws://localhost:8080/ws" # Change to server's IP if on different
 BROADCASTER_TARGETS = {'wrldmap'} # Change this to your Twitch username, or add more!
 ENABLED = False
 cmds = {
-    '!enable', '!disable', # other cmds
-    'a', 'b', 'x', 'y', # face
-    'l', 'r', 'zl', 'zr', # trig/shldr
-    'n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw', # dpad
-    'ln', 'ls', 'le', 'lw', 'lne', 'lnw', 'lse', 'lsw', 'lt', # left joy
-    'rn', 'rs', 're', 'rw', 'rne', 'rnw', 'rse', 'rsw', 'rt', # right joy
-    'start', 'select', # special
+    '!enable', '!disable' # Control commands
 }
-# Yes, you have to add to both. Don't add a minus at the end of these, though.
-# You can disable some if you don't need them for said game, just remove them from the commands list ^^^
-# By default, all DS4 buttons are mapped, except for touchpad and PS button. Not like you need them, though.
+# You can disable some if you don't need them for said game, comment out the line and add/remove commas as needed.
+# By default, all DS4 buttons are mapped, except for touchpad and PS button. Not like you probably will need them, though.
 BUTTON_MAP = {
     'a': (gp.tap, DS4_BUTTONS.DS4_BUTTON_CROSS),
     'b': (gp.tap, DS4_BUTTONS.DS4_BUTTON_CIRCLE),
@@ -149,35 +142,9 @@ async def send_message_upstream(broadcaster, message, reply_id, websocket):
     except Exception as e:
         print(f"failed for reason: {e}")
 
-# You may need to change this :D
-async def handle_command(clean_cmd, long, broadcaster, editor, msgid, websocket):
-    global ENABLED
-
-    # Only accept from my channel, please!
-    if broadcaster not in BROADCASTER_TARGETS:
-        return
-
-    if clean_cmd == '!enable' and editor:
-        msg = "enabled!" if not ENABLED else "already enabled!"
-        ENABLED = True
-        await send_message_upstream(broadcaster, msg, msgid, websocket)
-        return
-
-    if clean_cmd == '!disable' and editor:
-        msg = "disabled!" if ENABLED else "already disabled!"
-        ENABLED = False
-        await send_message_upstream(broadcaster, msg, msgid, websocket)
-        return
-
-    if not ENABLED:
-        return
-
-    if clean_cmd in BUTTON_MAP:
-        await gp.queue.put((clean_cmd, long))
-
 
 async def listen_to_chat_stream():
-    global cmds
+    global ENABLED
     while True:
         try:
             async with websockets.connect(WEBSOCKET_URL) as websocket:
@@ -187,21 +154,40 @@ async def listen_to_chat_stream():
                     try:
                         data = json.loads(raw_payload)
                         if data.get("action", "Unknown") == "recieve_chat":
+                            broadcaster = data.get("broadcaster", "Unknown")
+                            editor = bool(data.get("editor", False))
                             message = data.get("message", "Unknown")
-                            tokens = message.split()
-                            lowcase = tokens[0].lower() if tokens else ""
+                            msgid = data.get("id", "Unknown")
 
-                            long = lowcase.endswith("-")
-                            clean_cmd = lowcase.rstrip("-")
+                            if broadcaster not in BROADCASTER_TARGETS:
+                                continue
 
-                            if clean_cmd in cmds:
-                                broadcaster = data.get("broadcaster", "Unknown")
-                                editor = bool(data.get("editor", False))
-                                msgid = data.get("id", "Unknown")
+                            parts = message.split("+")
 
-                                asyncio.create_task(
-                                    handle_command(clean_cmd, long, broadcaster, editor, msgid, websocket)
-                                )
+                            for part in parts:
+                                tokens = part.strip().split()
+                                lowcase = tokens[0].lower() if tokens else ""
+
+                                long = lowcase.endswith("-")
+                                clean_cmd = lowcase.rstrip("-")
+
+                                if clean_cmd == '!enable' and editor:
+                                    msg = "enabled!" if not ENABLED else "already enabled!"
+                                    ENABLED = True
+                                    await send_message_upstream(broadcaster, msg, msgid, websocket)
+                                    break
+
+                                if clean_cmd == '!disable' and editor:
+                                    msg = "disabled!" if ENABLED else "already disabled!"
+                                    ENABLED = False
+                                    await send_message_upstream(broadcaster, msg, msgid, websocket)
+                                    break
+
+                                if not ENABLED:
+                                    break
+
+                                if clean_cmd in BUTTON_MAP.keys():
+                                    await gp.queue.put((clean_cmd, long))
 
                     except json.JSONDecodeError:
                         print(f"I can't parse that, boss. DecodeError: {raw_payload}")
@@ -212,11 +198,9 @@ async def listen_to_chat_stream():
             print("disconnected, reconnection attempt in 3secs")
             await asyncio.sleep(3)
 
-
 async def main():
     worker_task = asyncio.create_task(gamepad_worker())
     await listen_to_chat_stream()
-
 
 if __name__ == "__main__":
     asyncio.run(main())
