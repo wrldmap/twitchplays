@@ -9,7 +9,7 @@ load_dotenv()
 def save_to_env(updates: dict, path='.env'):
     lines = []
     if os.path.exists(path):
-        with open(path, 'f') as f:
+        with open(path, 'r') as f:
             lines = f.readlines()
 
     keys_overwritten = set()
@@ -65,5 +65,5 @@ async def main():
     save_to_env({'ACCESS_TOKEN': token.access_token, 'REFRESH_TOKEN': token.refresh_token})
     save_to_env({'CONDUIT_ID': conduitid})
 
-    print("Saved to .env, you can run bot.py now!")
+    print("Saved to .env, you can run server.py now!")
 asyncio.run(main())
