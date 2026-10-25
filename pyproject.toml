@@ -8,11 +8,11 @@ authors = [
 requires-python = "^3.14"
 dependencies = [
     "twitch-py (==4.0.4)",
-    "python-dotenv (==1.2.2)",
-    "fastapi (>=0.139.0,<0.140.0)",
+    "python-dotenv (==1.2.4)",
+    "fastapi (==0.162.0)",
     "asqlite (==2.0.0)",
-    "uvicorn (>=0.51.0,<0.52.0)",
-    "websockets (>=16.0,<17.0)",
+    "uvicorn (==0.54.0)",
+    "websockets (==17.3)",
     "vgamepad (==0.1.0)",
 ]
 
